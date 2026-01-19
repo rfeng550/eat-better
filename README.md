@@ -43,7 +43,21 @@ The backend is built with ASP.NET Core.
     ```
 3.  The backend will start on **http://localhost:5265**. All API requests are handled here.
 
-### 4. Start the Frontend
+### 4. Access the CMS Admin Panel
+
+The backend includes a FormCMS admin panel for managing content.
+
+1.  **Access URL**: Open your browser to **http://localhost:5265/admin**
+    *   Alternative: **http://localhost:5265/_content/FormCMS/admin**
+2.  **Default Admin Credentials**:
+    *   **Super Admin**:
+        *   Email: `sadmin@cms.com`
+        *   Password: `Admin1!`
+    *   **Admin**:
+        *   Email: `admin@cms.com`
+        *   Password: `Admin1!`
+
+### 5. Start the Frontend
 
 The frontend is a Vite + React + TypeScript application.
 

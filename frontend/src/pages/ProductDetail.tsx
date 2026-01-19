@@ -106,8 +106,12 @@ const ProductDetail = () => {
                             type="number"
                             id="quantity"
                             min="1"
+                            max="20"
                             value={quantity}
-                            onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                            onChange={(e) => {
+                                const value = parseInt(e.target.value) || 1;
+                                setQuantity(Math.min(Math.max(value, 1), 20));
+                            }}
                             style={{ padding: '5px', width: '60px' }}
                         />
                     </div>
