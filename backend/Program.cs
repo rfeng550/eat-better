@@ -46,6 +46,35 @@ using var scope = app.Services.CreateScope();
 var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 await ctx.Database.EnsureCreatedAsync();
 
+var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+if (!await roleManager.RoleExistsAsync("guest"))
+{
+    await roleManager.CreateAsync(new IdentityRole("guest"));
+}
+
+var guestRole = await roleManager.FindByNameAsync("guest");
+var claims = await roleManager.GetClaimsAsync(guestRole);
+if (!claims.Any(c => c.Type == "RestrictedAccess" && c.Value == "order"))
+{
+    await roleManager.AddClaimAsync(guestRole, new System.Security.Claims.Claim("RestrictedAccess", "order"));
+}
+if (!claims.Any(c => c.Type == "RestrictedAccess" && c.Value == "orderItem"))
+{
+    await roleManager.AddClaimAsync(guestRole, new System.Security.Claims.Claim("RestrictedAccess", "orderItem"));
+}
+if (!claims.Any(c => c.Type == "RestrictedAccess" && c.Value == "category"))
+{
+    await roleManager.AddClaimAsync(guestRole, new System.Security.Claims.Claim("RestrictedAccess", "category"));
+}
+if (!claims.Any(c => c.Type == "RestrictedAccess" && c.Value == "categoriesca"))
+{
+    await roleManager.AddClaimAsync(guestRole, new System.Security.Claims.Claim("RestrictedAccess", "categoriesca"));
+}
+if (!claims.Any(c => c.Type == "RestrictedAccess" && c.Value == "product"))
+{
+    await roleManager.AddClaimAsync(guestRole, new System.Security.Claims.Claim("RestrictedAccess", "product"));
+}
+
 //add two default admin users
 await app.EnsureCmsUser("sadmin@cms.com", "Admin1!", [Roles.Sa]).Ok();
 await app.EnsureCmsUser("admin@cms.com", "Admin1!", [Roles.Admin]).Ok();
@@ -62,7 +91,11 @@ app.MapWhen(context =>
         subApp.UseRouting();
         subApp.UseEndpoints(endpoints =>
         {
-            endpoints.MapFallbackToFile("/", $"index.html");
+            endpoints.MapGet("/", context => 
+            {
+                context.Response.Redirect("/admin");
+                return Task.CompletedTask;
+            });
             endpoints.MapFallbackToFile("/{*path:nonfile}", $"index.html");
         });
     }); 

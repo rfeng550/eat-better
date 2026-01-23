@@ -5,6 +5,7 @@ interface Product {
     id: number;
     name: string;
     salePrice: string;
+    unit?: string;
     __record_id: number;
     hasPreviousPage: boolean;
     hasNextPage: boolean;
@@ -92,7 +93,7 @@ const ProductDetail = () => {
             <div style={{ border: '1px solid #e0e0e0', borderRadius: '8px', padding: '30px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
                 <h1 style={{ marginTop: 0 }}>{product.name}</h1>
                 <div style={{ fontSize: '1.2em', color: '#444', marginBottom: '20px' }}>
-                    Price: <strong>${product.salePrice}</strong>
+                    Price: <strong>${product.salePrice}{product.unit ? ` / ${product.unit}` : ''}</strong>
                 </div>
                 <div style={{ color: '#888', fontSize: '0.9em' }}>
                     <p>Internal ID: {product.id}</p>

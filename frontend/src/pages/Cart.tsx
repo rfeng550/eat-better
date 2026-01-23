@@ -47,7 +47,7 @@ const Cart = () => {
             });
 
             const items = cartItems.map(item => ({
-                "product": { "id": item.productId },
+                "name": item.productId,
                 "count": item.quantity
             }));
             if (!loginRes.ok) throw new Error('Login failed');
