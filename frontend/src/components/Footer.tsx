@@ -12,30 +12,33 @@ const Footer = () => {
             <div style={{
                 maxWidth: '1200px',
                 margin: '0 auto',
-                textAlign: 'center'
+                display: 'flex',
+                alignItems: 'center',
+                gap: '30px'
             }}>
-                <h2 style={{
-                    margin: '0 0 15px 0',
-                    fontSize: '1.5em',
-                    fontWeight: 'bold'
-                }}>
-                    🍽️ Eat Better!
-                </h2>
-                <p style={{
-                    margin: '10px 0',
-                    fontSize: '0.95em',
-                    color: '#bdc3c7'
-                }}>
-                    Your journey to healthier eating starts here
-                </p>
-                <div style={{
-                    marginTop: '20px',
-                    paddingTop: '20px',
-                    borderTop: '1px solid #4a5f7f',
-                    fontSize: '0.9em',
-                    color: '#95a5a6'
-                }}>
-                    © {currentYear} Eat Better! All rights reserved.
+                <img
+                    src="/logo.png"
+                    alt="Logo"
+                    style={{
+                        height: '80px',
+                        width: 'auto'
+                    }}
+                />
+                <div style={{ flex: 1 }}>
+                    <p style={{
+                        margin: '10px 0',
+                        fontSize: '0.95em',
+                        color: '#bdc3c7'
+                    }}>
+                        Your journey to healthier eating starts here
+                    </p>
+                    <div style={{
+                        marginTop: '10px',
+                        fontSize: '0.9em',
+                        color: '#95a5a6'
+                    }}>
+                        © {currentYear} Eat Better! All rights reserved.
+                    </div>
                 </div>
             </div>
         </footer>

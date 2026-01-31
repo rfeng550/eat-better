@@ -94,10 +94,26 @@ const Home = () => {
         : products.filter(p => p.category?.some(c => c.id === selectedCategory));
 
     // Filter by search term
+
     if (searchTerm.trim()) {
-        filteredProducts = filteredProducts.filter(p =>
-            p.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        const lowerTerm = searchTerm.toLowerCase().trim();
+        filteredProducts = filteredProducts.filter(p => {
+            const name = p.name.toLowerCase();
+
+            // 1. Exact match (includes substring)
+            if (name.includes(lowerTerm)) return true;
+
+            // 2. Fuzzy match for Chinese: match if any character matches
+            // This allows finding "中芹" when searching "芹菜" (common char "芹")
+            // Only apply if the search term contains Chinese characters to avoid noise for English
+            const hasChinese = /[\u4e00-\u9fa5]/.test(lowerTerm);
+            if (hasChinese) {
+                const searchChars = lowerTerm.split('').filter(c => c.trim() !== '');
+                return searchChars.some(char => name.includes(char));
+            }
+
+            return false;
+        });
     }
 
     const displayedProducts = filteredProducts.slice(0, displayCount);
@@ -109,8 +125,8 @@ const Home = () => {
         setSearchTerm('');
     }, [selectedCategory]);
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error}</div>;
+    if (loading) return <div>加载中...</div>;
+    if (error) return <div>错误: {error}</div>;
 
     return (
         <div style={{ padding: '20px' }}>
@@ -154,7 +170,7 @@ const Home = () => {
                         boxShadow: selectedCategory === 'all' ? '0 4px 12px rgba(255,107,53,0.4)' : '0 2px 6px rgba(255,152,0,0.2)'
                     }}
                 >
-                    🌟 All
+                    🌟 全部
                 </button>
                 {categories.map(category => (
                     <button
@@ -194,7 +210,7 @@ const Home = () => {
                             />
                         )}
                         <h3 style={{ margin: '0 0 10px 0' }}>{product.name}</h3>
-                        <p style={{ margin: '0 0 10px 0', color: '#666' }}>Price: ${product.salePrice}{product.unit ? ` / ${product.unit}` : ''}</p>
+                        <p style={{ margin: '0 0 10px 0', color: '#666' }}>价格: ${product.salePrice}{product.unit ? ` / ${product.unit}` : ''}</p>
                         <Link
                             to={`/${product.id}`}
                             style={{
@@ -206,7 +222,7 @@ const Home = () => {
                                 borderRadius: '4px'
                             }}
                         >
-                            View Details
+                            查看详情
                         </Link>
                     </div>
                 ))}
@@ -231,7 +247,7 @@ const Home = () => {
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FF6B35'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FF8C42'}
                     >
-                        Load More
+                        加载更多
                     </button>
                 </div>
             )}
