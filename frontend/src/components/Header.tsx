@@ -3,58 +3,69 @@ import { Link } from 'react-router-dom';
 const Header = () => {
     return (
         <header style={{
-            backgroundColor: '#2c3e50',
+            backgroundColor: '#FF6B35',
             color: 'white',
-            padding: '20px 40px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            padding: window.innerWidth <= 768 ? '12px 24px' : '12px 24px',
+            boxShadow: '0 2px 8px rgba(255,107,53,0.3)',
             position: 'sticky',
             top: 0,
             zIndex: 1000
         }}>
             <div style={{
-                maxWidth: '1200px',
-                margin: '0 auto',
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'center'
+                alignItems: 'center',
+                width: '100%'
             }}>
                 <Link to="/" style={{
                     textDecoration: 'none',
-                    color: 'white'
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '15px'
                 }}>
-                    <h1 style={{
-                        margin: 0,
-                        fontSize: '2em',
-                        fontWeight: 'bold',
-                        letterSpacing: '1px'
-                    }}>
-                        🍽️ Eat Better!
-                    </h1>
+                    <img
+                        src="/logo.png"
+                        alt="Eat Better Logo"
+                        style={{
+                            height: window.innerWidth <= 768 ? '90px' : '90px',
+                            width: 'auto'
+                        }}
+                    />
                 </Link>
 
                 <nav style={{
                     display: 'flex',
                     gap: '30px',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    marginLeft: 'auto'
                 }}>
                     <Link to="/" style={{
                         color: 'white',
                         textDecoration: 'none',
                         fontSize: '1.1em',
-                        transition: 'color 0.3s'
-                    }}>
-                        Home
+                        fontWeight: '900',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                        transition: 'opacity 0.3s',
+                        letterSpacing: '0.5px',
+                        marginLeft: '30px'
+                    }}
+                        onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+                        onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
+                        首页
                     </Link>
                     <Link to="/cart" style={{
                         color: 'white',
                         textDecoration: 'none',
                         fontSize: '1.1em',
-                        transition: 'color 0.3s',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                    }}>
-                        🛒 Cart
+                        fontWeight: '900',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                        transition: 'opacity 0.3s',
+                        letterSpacing: '0.5px'
+                    }}
+                        onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+                        onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
+                        购物车
                     </Link>
                 </nav>
             </div>

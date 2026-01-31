@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 interface Category {
     id: number;
@@ -21,11 +21,44 @@ interface Product {
 }
 
 const Home = () => {
+    // Helper function to get emoji for category
+    const getCategoryEmoji = (categoryName: string): string => {
+        const emojiMap: { [key: string]: string } = {
+            '蔬菜': '🥬',
+            '水果': '🍎',
+            '肉': '🥩',
+            '海鲜': '🦞',
+            '面食': '🍜',
+            '速食': '🍱'
+        };
+        return emojiMap[categoryName] || '🍽️';
+    };
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const categoryParam = searchParams.get('category');
+    const selectedCategory = (categoryParam && categoryParam !== 'all') ? Number(categoryParam) : 'all';
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [displayCount, setDisplayCount] = useState<number>(8);
+    const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
+    const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+        const handleScroll = () => {
+            setShowScrollTop(window.scrollY > 300);
+        };
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('scroll', handleScroll);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -55,54 +88,103 @@ const Home = () => {
         fetchData();
     }, []);
 
-    const filteredProducts = selectedCategory === 'all'
+    // Filter by category
+    let filteredProducts = selectedCategory === 'all'
         ? products
         : products.filter(p => p.category?.some(c => c.id === selectedCategory));
+
+    // Filter by search term
+    if (searchTerm.trim()) {
+        filteredProducts = filteredProducts.filter(p =>
+            p.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }
+
+    const displayedProducts = filteredProducts.slice(0, displayCount);
+    const hasMore = filteredProducts.length > displayCount;
+
+    // Reset display count and search when category changes
+    useEffect(() => {
+        setDisplayCount(8);
+        setSearchTerm('');
+    }, [selectedCategory]);
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
 
     return (
         <div style={{ padding: '20px' }}>
-            <h1>All Products</h1>
+
+            {/* Search Bar */}
+            <div style={{ marginBottom: '20px' }}>
+                <input
+                    type="text"
+                    placeholder="🔍 搜索产品..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{
+                        width: '100%',
+                        padding: '12px 20px',
+                        fontSize: '1em',
+                        border: '2px solid #ddd',
+                        borderRadius: '8px',
+                        outline: 'none',
+                        transition: 'border-color 0.3s'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#007bff'}
+                    onBlur={(e) => e.target.style.borderColor = '#ddd'}
+                />
+            </div>
 
             {/* Category Filter */}
-            <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '5px' }}>
+            <div style={{ marginBottom: '30px', display: 'flex', gap: '15px', overflowX: 'auto', paddingBottom: '10px' }}>
                 <button
-                    onClick={() => setSelectedCategory('all')}
+                    onClick={() => setSearchParams({ category: 'all' })}
                     style={{
-                        padding: '8px 16px',
-                        backgroundColor: selectedCategory === 'all' ? '#007bff' : '#f0f0f0',
-                        color: selectedCategory === 'all' ? 'white' : 'black',
-                        border: 'none',
-                        borderRadius: '20px',
+                        padding: '14px 28px',
+                        backgroundColor: selectedCategory === 'all' ? '#FF6B35' : '#FFF5E6',
+                        color: selectedCategory === 'all' ? 'white' : '#333',
+                        border: selectedCategory === 'all' ? 'none' : '2px solid #FFE0B2',
+                        borderRadius: '25px',
                         cursor: 'pointer',
-                        whiteSpace: 'nowrap'
+                        whiteSpace: 'nowrap',
+                        fontSize: '1.1em',
+                        fontWeight: '600',
+                        transition: 'all 0.3s ease',
+                        boxShadow: selectedCategory === 'all' ? '0 4px 12px rgba(255,107,53,0.4)' : '0 2px 6px rgba(255,152,0,0.2)'
                     }}
                 >
-                    All
+                    🌟 All
                 </button>
                 {categories.map(category => (
                     <button
                         key={category.id}
-                        onClick={() => setSelectedCategory(category.id)}
+                        onClick={() => setSearchParams({ category: category.id.toString() })}
                         style={{
-                            padding: '8px 16px',
-                            backgroundColor: selectedCategory === category.id ? '#007bff' : '#f0f0f0',
-                            color: selectedCategory === category.id ? 'white' : 'black',
-                            border: 'none',
-                            borderRadius: '20px',
+                            padding: '14px 28px',
+                            backgroundColor: selectedCategory === category.id ? '#FF6B35' : '#FFF5E6',
+                            color: selectedCategory === category.id ? 'white' : '#333',
+                            border: selectedCategory === category.id ? 'none' : '2px solid #FFE0B2',
+                            borderRadius: '25px',
                             cursor: 'pointer',
-                            whiteSpace: 'nowrap'
+                            whiteSpace: 'nowrap',
+                            fontSize: '1.1em',
+                            fontWeight: '600',
+                            transition: 'all 0.3s ease',
+                            boxShadow: selectedCategory === category.id ? '0 4px 12px rgba(255,107,53,0.4)' : '0 2px 6px rgba(255,152,0,0.2)'
                         }}
                     >
-                        {category.name}
+                        {getCategoryEmoji(category.name)} {category.name}
                     </button>
                 ))}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
-                {filteredProducts.map(product => (
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+                gap: '20px'
+            }}>
+                {displayedProducts.map(product => (
                     <div key={product.id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                         {product.pictures && (
                             <img
@@ -129,6 +211,60 @@ const Home = () => {
                     </div>
                 ))}
             </div>
+
+            {hasMore && (
+                <div style={{ marginTop: '30px', textAlign: 'center' }}>
+                    <button
+                        onClick={() => setDisplayCount(prev => prev + 4)}
+                        style={{
+                            padding: '12px 24px',
+                            backgroundColor: '#FF8C42',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '1em',
+                            fontWeight: 'bold',
+                            boxShadow: '0 4px 12px rgba(255,140,66,0.3)',
+                            transition: 'all 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FF6B35'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FF8C42'}
+                    >
+                        Load More
+                    </button>
+                </div>
+            )}
+
+            {/* Scroll to Top Button - Mobile Only */}
+            {isMobile && showScrollTop && (
+                <button
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    style={{
+                        position: 'fixed',
+                        bottom: '20px',
+                        right: '20px',
+                        width: '50px',
+                        height: '50px',
+                        borderRadius: '50%',
+                        backgroundColor: '#FF6B35',
+                        color: 'white',
+                        border: 'none',
+                        fontSize: '24px',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 12px rgba(255,107,53,0.4)',
+                        zIndex: 999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                    ↑
+                </button>
+            )}
         </div>
     );
 };
