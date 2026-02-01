@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Fuse from 'fuse.js';
 import { Link, useSearchParams } from 'react-router-dom';
 
 interface Category {
@@ -94,26 +95,24 @@ const Home = () => {
         : products.filter(p => p.category?.some(c => c.id === selectedCategory));
 
     // Filter by search term
-
     if (searchTerm.trim()) {
-        const lowerTerm = searchTerm.toLowerCase().trim();
-        filteredProducts = filteredProducts.filter(p => {
-            const name = p.name.toLowerCase();
+        const isChinese = /[\u4e00-\u9fa5]/.test(searchTerm);
+        let query = searchTerm;
 
-            // 1. Exact match (includes substring)
-            if (name.includes(lowerTerm)) return true;
+        // For Chinese, split characters and use OR matching
+        if (isChinese) {
+            query = searchTerm.split('').filter(c => c.trim()).join('|');
+        }
 
-            // 2. Fuzzy match for Chinese: match if any character matches
-            // This allows finding "中芹" when searching "芹菜" (common char "芹")
-            // Only apply if the search term contains Chinese characters to avoid noise for English
-            const hasChinese = /[\u4e00-\u9fa5]/.test(lowerTerm);
-            if (hasChinese) {
-                const searchChars = lowerTerm.split('').filter(c => c.trim() !== '');
-                return searchChars.some(char => name.includes(char));
-            }
-
-            return false;
+        const fuse = new Fuse(filteredProducts, {
+            keys: ['name'],
+            threshold: 0.3,
+            includeScore: true,
+            useExtendedSearch: true
         });
+
+        const results = fuse.search(query);
+        filteredProducts = results.map((result: any) => result.item);
     }
 
     const displayedProducts = filteredProducts.slice(0, displayCount);
@@ -132,14 +131,14 @@ const Home = () => {
         <div style={{ padding: '20px' }}>
 
             {/* Search Bar */}
-            <div style={{ marginBottom: '20px' }}>
+            <div style={{ marginBottom: '20px', textAlign: 'center' }}>
                 <input
                     type="text"
                     placeholder="🔍 搜索产品..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     style={{
-                        width: '100%',
+                        width: isMobile ? '60%' : '50%',
                         padding: '12px 20px',
                         fontSize: '1em',
                         border: '2px solid #ddd',
@@ -200,32 +199,44 @@ const Home = () => {
                 gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
                 gap: '20px'
             }}>
-                {displayedProducts.map(product => (
-                    <div key={product.id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                        {product.pictures && (
-                            <img
-                                src={`http://localhost:5265${product.pictures.url}`}
-                                alt={product.name}
-                                style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }}
-                            />
-                        )}
-                        <h3 style={{ margin: '0 0 10px 0' }}>{product.name}</h3>
-                        <p style={{ margin: '0 0 10px 0', color: '#666' }}>价格: ${product.salePrice}{product.unit ? ` / ${product.unit}` : ''}</p>
-                        <Link
-                            to={`/${product.id}`}
-                            style={{
-                                display: 'inline-block',
-                                padding: '8px 16px',
-                                backgroundColor: '#007bff',
-                                color: 'white',
-                                textDecoration: 'none',
-                                borderRadius: '4px'
-                            }}
-                        >
-                            查看详情
-                        </Link>
+                {displayedProducts.length > 0 ? (
+                    displayedProducts.map(product => (
+                        <div key={product.id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                            {product.pictures && (
+                                <img
+                                    src={`http://localhost:5265${product.pictures.url}`}
+                                    alt={product.name}
+                                    style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }}
+                                />
+                            )}
+                            <h3 style={{ margin: '0 0 10px 0' }}>{product.name}</h3>
+                            <p style={{ margin: '0 0 10px 0', color: '#666' }}>价格: ${product.salePrice}{product.unit ? ` / ${product.unit}` : ''}</p>
+                            <Link
+                                to={`/${product.id}`}
+                                style={{
+                                    display: 'inline-block',
+                                    padding: '8px 16px',
+                                    backgroundColor: '#007bff',
+                                    color: 'white',
+                                    textDecoration: 'none',
+                                    borderRadius: '4px'
+                                }}
+                            >
+                                查看详情
+                            </Link>
+                        </div>
+                    ))
+                ) : (
+                    <div style={{
+                        gridColumn: '1 / -1',
+                        textAlign: 'center',
+                        padding: '40px',
+                        color: '#666',
+                        fontSize: '1.2em'
+                    }}>
+                        🤷‍♂️ 抱歉，没有找到相关产品
                     </div>
-                ))}
+                )}
             </div>
 
             {hasMore && (
