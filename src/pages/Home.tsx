@@ -204,7 +204,7 @@ const Home = () => {
                         <div key={product.id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                             {product.pictures && (
                                 <img
-                                    src={`http://localhost:5265${product.pictures.url}`}
+                                    src={product.pictures.url}
                                     alt={product.name}
                                     style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }}
                                 />

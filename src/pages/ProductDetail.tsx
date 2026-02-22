@@ -176,7 +176,7 @@ const ProductDetail = () => {
                         }}>
                             {product.pictures ? (
                                 <img
-                                    src={`http://localhost:5265${product.pictures.url}`}
+                                    src={product.pictures.url}
                                     alt={product.name}
                                     style={{
                                         width: '100%',
