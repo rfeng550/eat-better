@@ -1,101 +1,93 @@
 # Eat Better Project Setup Guide
 
-This guide explains how to set up and run the **Eat Better** project on macOS.
+This guide explains how to set up and run the **Eat Better** project. The project consists of a React frontend and relies on a Dockerized FormCMS backend with PostgreSQL.
 
 ## Prerequisites
 
 Before starting, ensure you have the following installed:
 
-1.  **Git**: [Install Git](https://git-scm.com/downloads) or use `brew install git`.
-2.  **.NET 9.0 SDK**: [Download .NET 9.0](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
-    *   Verify installation: `dotnet --version`
-3.  **Node.js & npm**: [Download Node.js](https://nodejs.org/) (LTS recommended) or use `brew install node`.
-    *   Verify installation: `node -v` and `npm -v`
+1.  **Node.js & npm**: [Download Node.js](https://nodejs.org/) (LTS recommended)
+2.  **Docker & Docker Compose**: Required to run the FormCMS backend and PostgreSQL database.
+
+## Architecture
+
+*   **Frontend**: Vite + React + TypeScript (located in the root of this repository).
+*   **Backend**: We use FormCMS without needing a custom local backend codebase. It can be easily set up using Docker Compose.
 
 ## Getting Started
 
-### 1. Clone the Repository
+### 1. Set Up the Backend (FormCMS + PostgreSQL via Docker)
 
-```bash
-git clone <repository_url>
-cd eat-better
+There is no need to run a local backend built from source. Instead, the backend is provided via Docker Compose using PostgreSQL and the official FormCMS image.
+
+Create a `docker-compose.yml` file in the root directory (or use the one provided) with the following content:
+
+```yaml
+services:
+  app:
+    image: jaike/formcms-mono:latest
+    ports:
+      - "5000:5000"
+    environment:
+      # --- Database ---
+      - DATABASE_PROVIDER=1                # 0=SQLite, 1=Postgres, 2=SqlServer, 3=MySQL
+      - CONNECTION_STRING=Host=db;Port=5432;Database=cms;Username=postgres;Password=postgres;
+      - DatabaseProvider=Postgres
+      - "ConnectionStrings__Postgres=Host=db;Database=cms;Username=postgres;Password=postgres;"
+      - FORMCMS_DATA_PATH=/data
+
+      # --- Node.js (internal, no need to change) ---
+      - PORT=3001
+      - NODE_ENV=production
+      - FORMCMS_BASE_URL=http://127.0.0.1:5001
+      - DATABASE_URL=file:/data/mate/sqlite.db
+    depends_on:
+      - db
+    restart: unless-stopped
+    volumes:
+      - formcms_data:/data
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=cms
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  formcms_data:
 ```
 
-### 2. Using Antigravity
+To set up the backend, run:
 
-Antigravity is your AI coding assistant. You can use it to help develop features, debug code, or understand the project.
+```bash
+docker compose up -d
+```
 
-*   **Chat**: Open the AI chat panel to ask questions or request changes (e.g., "Add a new page for users").
-*   **Context**: Antigravity uses your open files as context. Open the file you want to discuss to get better results.
-*   **Commands**: You can ask it to run terminal commands, create files, or refactor code directly.
+### 2. Access the CMS and Mate App
 
-### 3. Start the Backend
+Once the Docker containers are running, you can access the FormCMS ecosystem (default backend port is `5000`):
 
-The backend is built with ASP.NET Core.
+#### System Setup and Schema Development (Mate)
+Develop and manage the database schema.
+1.  **Access URL**: Open your browser to **http://localhost:5000/mate**
 
-1.  Navigate to the backend directory:
-    ```bash
-    cd backend
-    ```
-2.  Start the server:
-    ```bash
-    dotnet run
-    ```
-3.  The backend will start on **http://localhost:5265**. All API requests are handled here.
+#### Content Management (Admin)
+Manage your content and data.
+1.  **Access URL**: Open your browser to **http://localhost:5000/admin**
 
-### 4. Start the Frontend
 
-The frontend is a Vite + React + TypeScript application.
-
-1.  Navigate to the frontend directory:
-    ```bash
-    cd frontend
-    ```
-2.  Install dependencies (first time only):
+### 3. Start the Frontend
+1.  Install dependencies (first time only):
     ```bash
     npm install
     ```
-3.  Start the development server:
+2.  Start the development server:
     ```bash
     npm run dev
     ```
-4.  Open your browser to **http://localhost:5173**.
-
-## Deployment (Oracle Cloud / Docker)
-
-This project is configured to run as a single Docker container containing both Backend and Frontend.
-
-### 1. Build the Docker Image
-```bash
-docker build -t eat-better-app .
-```
-
-### 2. Run with Persistent Database
-To ensure your database survives container restarts (updates), you **must** use a volume mapped to `/app/data`.
-
-```bash
-# Create a data directory on your host
-mkdir -p ~/eat-better-data
-
-# Run the container
-docker run -d \
-  --name eat-better \
-  --restart unless-stopped \
-  -p 80:8080 \
-  -v ~/eat-better-data:/app/data \
-  -e ConnectionStrings__DefaultConnection="Data Source=data/cms.db" \
-  eat-better-app
-```
-
-### 3. Updating
-To update the app:
-1.  `git pull`
-2.  `docker build -t eat-better-app .`
-3.  `docker stop eat-better && docker rm eat-better`
-4.  Run the `docker run` command again.
-
-## Troubleshooting
-
-*   **Address already in use**: If you see an error about port 5265 or 5173 being in use:
-    *   Find the process: `lsof -i :5265`
-    *   Kill it: `kill -9 <PID>`
+3.  Open your browser to **http://localhost:5173**.
